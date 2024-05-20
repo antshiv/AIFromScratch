@@ -11,7 +11,7 @@ int main() {
 	char     train_path_y[] = "train_set_y";
 	char     test_path[] = "test_set_x";
 	H5O_info2_t info;
-	int elts[10000000];
+	int elts[100000];
 	
 	if ((file = H5Fopen(file_name, mode, H5P_DEFAULT)) == H5I_INVALID_HID) {
         	printf("Error loading H5 data \n");
@@ -24,9 +24,9 @@ int main() {
 	}
        
 	if (H5Oget_info_by_name(file, train_path, &info, H5O_INFO_BASIC | H5O_INFO_NUM_ATTRS, H5P_DEFAULT) < 0) {
-       		printf("Unable to get h5 info \n" ); 
+		printf("Unable to get h5 info \n" ); 
 		return 0;
-       	}
+	}
 
 	// get the dataset's dataspace
         if ((fspace = H5Dget_space(dset)) == H5I_INVALID_HID) {
