@@ -84,9 +84,14 @@ hid_t type, native_type;
     dataspace = H5Dget_space(dataset_id);
     ndims = H5Sget_simple_extent_ndims(dataspace);
     H5Sget_simple_extent_dims(dataspace, dims, NULL);
-    printf("The dims are[0] = %ld  [1] = %d [2] = %d [3] = %d \n",dims[0],  dims[1], dims[2], dims[3]);
+    printf("The dims are[0] = %ld  [1] = %ld [2] = %ld [3] = %ld \n",dims[0],  dims[1], dims[2], dims[3]);
+
+    size_t train_set_x_size = dims[0] * dims[1] * dims[2] * dims[3];
+    unsigned char *train_set_x = malloc(train_set_x_size * sizeof(unsigned char));  // Allocate memory
+
     //unsigned char (*train_set_x)[dims[1]][dims[2]][dims[3]] = malloc(dims[0] * sizeof(*train_set_x));  // Allocate memory
-    unsigned char train_set_x[209][64][64][3];  // Adjust dimensions accordingly
+    //unsigned char train_set_x[209][64][64][3];  // Adjust dimensions accordingly
+    
     if (train_set_x == NULL) {
         fprintf(stderr, "Error allocating memory for train_set_x\n");
         H5Dclose(dataset_id);
@@ -98,9 +103,10 @@ hid_t type, native_type;
     if (status < 0) {
         fprintf(stderr, "Error reading dataset: %s\n", DATASET_TRAIN_SET_X);
     } else {
-        printf("train_set_x[0][0][0]: %u\n", train_set_x[0][0][0][0]);  // Example output
+       //printf("train_set_x[0][0][0]: %u\n", train_set_x[0][52][59][0]);  // Example output
+       printf("train_set_x[0][0][0]: %u\n", train_set_x[52*59]);  // Example output
     }
-    //free(train_set_x);
+    free(train_set_x);
     H5Dclose(dataset_id);
     H5Tclose(datatype);
     H5Sclose(dataspace);
@@ -118,8 +124,8 @@ hid_t type, native_type;
     ndims = H5Sget_simple_extent_ndims(dataspace);
     H5Sget_simple_extent_dims(dataspace, dims, NULL);
 
-    //long long *train_set_y = malloc(dims[0] * sizeof(long long));  // Allocate memory
-    long long train_set_y[209];  // Assuming 64-bit integers
+    long long *train_set_y = malloc(dims[0] * sizeof(long long));  // Allocate memory
+    //long long train_set_y[209];  // Assuming 64-bit integers
     //unsigned char train_set_x[200][64][64][3];  // Adjust dimensions accordingly
     if (train_set_y == NULL) {
         fprintf(stderr, "Error allocating memory for train_set_y\n");
@@ -138,7 +144,7 @@ hid_t type, native_type;
         }
         printf("\n");
     }
-    //free(train_set_y);
+    free(train_set_y);
     H5Dclose(dataset_id);
     H5Tclose(datatype);
     H5Sclose(dataspace);

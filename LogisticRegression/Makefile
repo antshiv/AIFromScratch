@@ -1,16 +1,13 @@
-main: main.o
-	g++ main.o  -o main
+CC = gcc
+CFLAGS = -I./include -L/home/antshiv/Programs/lib -lhdf5
 
-hdf5: loadh5.o
-	gcc loadh5.o -o h5 -L/home/antshiv/Programs/lib -lhdf5 
+SRC = src/main.c src/hdf5_utils.c 
+OBJ = $(SRC:.c=.o)
 
-main.o: main.c
-	g++ -I/usr/local/include/opencv4 -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_features2d -lopencv_core -lopencv_videoio -lopencv_highgui -lopencv_imgcodecs -lGL -lglut -lGLU  -c main.c
+all: read_hdf5
 
+read_hdf5: $(OBJ)
+	$(CC)  -o $@ $^ $(CFLAGS)
 
-loadh5.o: loadh5.c
-	gcc loadh5.c -c -L/home/antshiv/Programs/lib -lhdf5 -lhdf5_tools 
 clean:
-	rm -f main.o main
-	rm *.o 
-	rm h5
+	rm -f read_hdf5 $(OBJ)
