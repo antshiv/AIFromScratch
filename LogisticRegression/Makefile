@@ -1,15 +1,11 @@
+# Include the directory-specific makefile
+include Dir.mk
+
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -L/home/antshiv/Programs/lib -lhdf5
+CFLAGS = -Wall -Wextra -Iinclude -L/home/antshiv/Programs/lib -lhdf5 -lm
 LDFLAGS= 
 
-
-# Source and target files
-SRC_DIR = src
-INCLUDE_DIR = include
-SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(SRCS:$(SRC_DIR)/%.c=%.o) 
-TARGET = read_hdf5
-
+#Default Rule
 all: $(TARGET)
 
 debug: CFLAGS += -DDEBUG -g
@@ -25,9 +21,11 @@ $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ $(CFLAGS) 
 
 # Compile source files into object files
-%.o: $(SRC_DIR)/%.c
-	$(CC) -c $< -o $@ $(CFLAGS) 
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/%.o: $(LOGISTIC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@ 
 
 # Clean up build files
 clean:

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "hdf5_utils.h"
+#include "nn.h"
+#include <stdbool.h>
 
 #define DATASET_TRAIN_SET_X "train_set_x"
 #define DATASET_TRAIN_SET_Y "train_set_y"
@@ -10,6 +12,7 @@ int main()
     // File and dataset names
     const char *train_file_name = "dataset/train_catvnoncat.h5";
     const char *test_file_name = "dataset/test_catvnoncat.h5";
+    dataset_t dataset_train_x, dataset_train_y, dataset_test_x, dataset_test_y;
 
     // Open the HDF5 files
     hid_t train_file_id = open_file(train_file_name);
@@ -35,6 +38,10 @@ int main()
         return 1;
     }
 
+    dataset_train_x.data = train_set_x;
+    dataset_train_x.dims = dims_x_train;
+    dataset_train_x.ndims = ndims_x_train;
+
 #ifdef DEBUG
     printf("The number of train_set_x dimensions is %d \n", ndims_x_train);
     for (int i = 0; i < ndims_x_train; i++)
@@ -57,6 +64,9 @@ int main()
         close_file(test_file_id);
         return 1;
     }
+    dataset_train_y.data = (long long*) train_set_y;
+    dataset_train_y.dims = dims_y_train;
+    dataset_train_y.ndims = ndims_y_train;
 
 #ifdef DEBUG
     for (int i = 0; i < dims_y_train[0]; i++)
@@ -76,6 +86,10 @@ int main()
         return 1;
     }
 
+    dataset_test_x.data = test_set_x;
+    dataset_test_x.dims = dims_x_test;
+    dataset_test_x.ndims = ndims_x_test;
+
     // Read the test_set_y dataset
     long long *test_set_y = (long long *)read_dataset(test_file_id, "test_set_y", &datatype, &dims_y_test, &ndims_y_test);
     if (!test_set_y)
@@ -88,6 +102,10 @@ int main()
         return 1;
     }
 
+    dataset_test_y.data = test_set_y;
+    dataset_test_y.dims = dims_y_test;
+    dataset_test_y.ndims = ndims_y_test;
+
     printf("The number of training Examples is %ld \n", dims_x_train[0]);
     printf("The number of test Examples is %ld \n", dims_x_test[0]);
     printf("The height and width of each image is  %ld, %ld \n", dims_x_train[1], dims_x_train[2]);
@@ -98,8 +116,11 @@ int main()
     printf("Test set x shape is %ld, %ld, %ld, %ld \n", dims_x_test[0], dims_x_test[1], dims_x_test[2], dims_x_test[3]);
     printf("Test set y shape is %ld \n", dims_y_test[0]);
 
+
+
     /* Let us train the neural network */
     //void *nn = train_nn(train_set_x, train_set_y, num_dims_x_train, dims_x_train, num_dims_y_train, dims_y_train, 0.01, 1000);
+    model(&dataset_train_x, &dataset_train_y, &dataset_test_x, &dataset_test_y, 10000, 0.005, true);
 
     // Cleanup
     free(train_set_x);
