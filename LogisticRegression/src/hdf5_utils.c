@@ -74,7 +74,6 @@ void get_rgb_values(const unsigned char *data, hsize_t height, hsize_t width, hs
     size_t index_r = image_index * height * width * channels + pixel_row * width * channels + pixel_col * channels + 0;
     size_t index_g = image_index * height * width * channels + pixel_row * width * channels + pixel_col * channels + 1;
     size_t index_b = image_index * height * width * channels + pixel_row * width * channels + pixel_col * channels + 2;
-
     // Retrieve the RGB values
     *r = data[index_r];
     *g = data[index_g];
