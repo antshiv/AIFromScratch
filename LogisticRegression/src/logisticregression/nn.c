@@ -26,7 +26,7 @@
 
 void normalize_dataset(dataset_t *dataset, size_t size) {
     printf("Normalizing the dataset\n");
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         ((unsigned char *)dataset->data)[i] = ((unsigned char *)dataset->data)[i] / 255.0;
     }
 }
@@ -47,6 +47,7 @@ void sigmoid(float *A, int size) {
 
 void pridict(float *W, float b, int *X) {
     printf("Predicting output\n");
+    printf("W[0] %f, b %f, X[0] %d\n", W[0], b, X[0]);
 }
 
 // Calculate the cost function
@@ -69,10 +70,10 @@ void forward_propagate(float *A, weights_t weights, dataset_t *X_train, int m, i
 }
 
 // Backward propagation
-void backward_propagate(gradients_t *gradients, float *A, weights_t weights, dataset_t *X_train, dataset_t *Y_train, int m, int size) {
+void backward_propagate(gradients_t *gradients, float *A, dataset_t *X_train, dataset_t *Y_train, int m, int size) {
     float *dz = calloc(m * size, sizeof(float));
     if (dz == NULL) {
-        fprintf(stderr, "Error allocating memory for dz\n");
+        fprintf(stderr, "Error allocating memory for dz\n"); 
         exit(EXIT_FAILURE);
     }
 
@@ -130,7 +131,7 @@ void backpropagate(gradients_t *gradients, weights_t weights, dataset_t *X_train
     }
 
     // Backward propagation
-    backward_propagate(gradients, A, weights, X_train, Y_train, m, size);
+    backward_propagate(gradients, A, X_train, Y_train, m, size);
 
     if (print) {
         printf("Gradients dw[0] %f and db %f\n", gradients->dw[0], gradients->db);
@@ -139,74 +140,12 @@ void backpropagate(gradients_t *gradients, weights_t weights, dataset_t *X_train
     free(A);
 }
 
-void backpropagate2(gradients_t *gradients, weights_t weights, dataset_t *X_train, dataset_t *Y_train, bool print) {
-    printf("Propagating forward and backward\n");
-
-    // Number of training examples
-    int m = X_train->dims[0];
-    int size = X_train->dims[1] * X_train->dims[2] * X_train->dims[3];
-
-    float *A = calloc(m * size, sizeof(float));
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < X_train->dims[1] * X_train->dims[2] * X_train->dims[3]; j++) {
-            A[i * size +j] = weights.w[j] * ((unsigned char *)X_train->data)[i * size +j] + weights.b;
-        }
-    }
-    sigmoid(A, m *size);
-
-    // Calculate the cost
-    float cost = 0;
-    for (int i = 0; i < m; i++) {
-        cost += -(((long long *)Y_train->data)[i] * log(A[i]) + (1 - ((long long *)Y_train->data)[i]) * log(1 - A[i]));
-    }
-    cost /= m;
-    printf("Cost is %f\n", cost);
-
-    // Backward pass
-    float *dz = calloc(m * size, sizeof(float));       
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < size; j++) {
-            dz[i * size + j] = A[i * size + j] - ((long long *)Y_train->data)[i];
-        }
-    }
-    printf("Dz[0] %f\n", dz[0]);
-
-    /* Calculate the gradients */
-    gradients->db = 0.0;
-
-    /* Set the gradients to zero */
-    for (int j = 0; j < size; j++) {
-        gradients->dw[j] = 0.0;
-    }
-
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < size; j++) {
-            gradients->dw[j] += dz[i * size + j] * ((unsigned char *)X_train->data)[i * size + j];
-        }
-        gradients->db += dz[i * size];
-    }
-    printf("X_train[0] %d\n", ((unsigned char *)X_train->data)[0]);
-    printf("Gradients dw[0] %f and db %f \n", gradients->dw[0], gradients->db);
-
-    for (int j = 0; j < size; j++) {
-        gradients->dw[j] /= m;
-    }
-    gradients->db /= m;
-    //printf("Gradients dw[0] %f and db %f \n", gradients->dw[0], gradients->db);
-
-    free(A);
-    free(dz);
-
-    return gradients;
-}
-
 void optimize(dataset_t *X_train, dataset_t *Y_train, weights_t weights, int epoch, float learning_rate, bool print) {
     gradients_t gradients;
     printf("Optimizing weights and biases\n");
     //printf("LEarning rate %f\n", learning_rate);
     
     // Number of training examples
-    int m = X_train->dims[0];
     int size = X_train->dims[1] * X_train->dims[2] * X_train->dims[3];
     
     float *dw;
@@ -230,7 +169,7 @@ void optimize(dataset_t *X_train, dataset_t *Y_train, weights_t weights, int epo
         
         printf("Gradients dw[0] %f and db %f \n", dw[0], db);
         
-        for (int j = 0; j < X_train->dims[1] * X_train->dims[2] * X_train->dims[3]; j++) {
+        for (hsize_t j = 0; j < X_train->dims[1] * X_train->dims[2] * X_train->dims[3]; j++) {
             weights.w[j] -= learning_rate * dw[j];
         }
         
@@ -248,7 +187,7 @@ void model(dataset_t *X_train, dataset_t *Y_train, dataset_t *X_test, dataset_t 
     normalize_dataset(X_train, X_train->dims[0] * X_train->dims[1] * X_train->dims[2] * X_train->dims[3]);
     int parameter_size = X_train->dims[1] * X_train->dims[2] * X_train->dims[3];
     if (print)
-        printf("The number of parameters is %ld \n", parameter_size);
+        printf("The number of parameters is %d \n", parameter_size);
 
     initialze_weights(&weights , parameter_size);
     if (print) 
@@ -256,6 +195,10 @@ void model(dataset_t *X_train, dataset_t *Y_train, dataset_t *X_test, dataset_t 
 
     optimize(X_train, Y_train, weights, epoch, learning_rate, print);
     //pridict(W, b, X_test);
+    printf("Modeling done\n");
+    //forward_propagate(weights.w, weights, X_test, X_test->dims[0], parameter_size);
+    //printf("Predicted output %f\n", weights.w[0]);
+    //printf("Comparing with actual output %ld\n", ((long *)Y_test->data)[0]);
     free(weights.w);
     return;
 }

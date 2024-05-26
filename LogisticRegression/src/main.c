@@ -120,7 +120,7 @@ int main()
 
     /* Let us train the neural network */
     //void *nn = train_nn(train_set_x, train_set_y, num_dims_x_train, dims_x_train, num_dims_y_train, dims_y_train, 0.01, 1000);
-    model(&dataset_train_x, &dataset_train_y, &dataset_test_x, &dataset_test_y, 10000, 0.005, true);
+    model(&dataset_train_x, &dataset_train_y, &dataset_test_x, &dataset_test_y, 10, 0.005, true);
 
     // Cleanup
     free(train_set_x);
