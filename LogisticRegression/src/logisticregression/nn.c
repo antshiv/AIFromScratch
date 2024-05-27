@@ -180,6 +180,30 @@ void optimize(dataset_t *X_train, dataset_t *Y_train, weights_t weights, int epo
     free(gradients.dw);
 }
 
+// Function to save weights to a binary file
+void save_weights_binary(const char *filename, weights_t *weights, size_t num_weights) {
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file for writing: %s\n", filename);
+        return;
+    }
+    fwrite(weights->w, sizeof(float), num_weights, file);
+    fclose(file);
+}
+
+// Function to save weights to a text file
+void save_weights_text(const char *filename, weights_t *weights, size_t num_weights) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file for writing: %s\n", filename);
+        return;
+    }
+    for (size_t i = 0; i < num_weights; ++i) {
+        fprintf(file, "%f\n", weights->w[i]);
+    }
+    fclose(file);
+}
+
 void model(dataset_t *X_train, dataset_t *Y_train, dataset_t *X_test, dataset_t *Y_test, int epoch, float learning_rate, bool print) {
     if (print)
         printf("Modeling the neural network\n");
@@ -194,6 +218,10 @@ void model(dataset_t *X_train, dataset_t *Y_train, dataset_t *X_test, dataset_t 
         printf("Initial weights and biases are %f, %f\n", weights.w[0], weights.b);
 
     optimize(X_train, Y_train, weights, epoch, learning_rate, print);
+     size_t num_weights = X_train->dims[1] * X_train->dims[2] * X_train->dims[3];
+
+    save_weights_binary("weights.bin", &weights, num_weights);
+    save_weights_text("weights.txt", &weights, num_weights);
     //pridict(W, b, X_test);
     printf("Modeling done\n");
     //forward_propagate(weights.w, weights, X_test, X_test->dims[0], parameter_size);
