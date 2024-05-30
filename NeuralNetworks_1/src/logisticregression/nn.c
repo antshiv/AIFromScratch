@@ -31,7 +31,7 @@ void normalize_dataset(dataset_t *dataset, size_t size) {
     }
 }
 
-void initialze_weights(weights_t *weights, int size) {
+void initialze_weights(weights_t *weights, int size) { 
     printf("Initialzing weights and biases\n");
     weights->w = calloc(size, sizeof(float));
     weights->b = 0;

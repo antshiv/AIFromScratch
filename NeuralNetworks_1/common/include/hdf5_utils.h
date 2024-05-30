@@ -11,4 +11,27 @@ void get_rgb_values(const unsigned char *data, hsize_t height, hsize_t width, hs
                     hsize_t image_index, hsize_t pixel_row, hsize_t pixel_col,
                     unsigned char *r, unsigned char *g, unsigned char *b);
 
+typedef enum
+{
+    TRAIN,
+    TEST
+} dataset_type_t;
+
+typedef struct dataset
+{
+    void *data;
+    hsize_t *dims;
+    int ndims;
+    char *name;
+    dataset_type_t type;
+} dataset_t;
+
+typedef struct {
+    const char *name;
+    dataset_type_t type;
+    dataset_t dataset;
+} dataset_info_t;
+
+
+
 #endif // HDF5_UTILS_H

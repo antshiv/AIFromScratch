@@ -5,13 +5,6 @@
 #include <hdf5.h>
 #include <stdbool.h>
 
-typedef struct dataset
-{
-    void *data;
-    hsize_t *dims;
-    int ndims;
-} dataset_t;
-
 typedef struct weights
 {
     float *w;
