@@ -1,0 +1,442 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <assert.h>
+#include <time.h>
+#include "hdf5_utils.h"
+#include "deep_neural_network.h"
+#include <string.h>
+
+// Function to calculate the sigmoid of a number
+void sigmoid(ActivationResult_t *result)
+{
+    printf("Calculating sigmoid\n");
+    printf("Size: %d\n", result->size);
+    for (int i = 0; i < result->size; i++)
+    {
+        result->A[i] = 1 / (1 + exp(-result->A[i]));
+    }
+    printf("Sigmoid of A[0] %f\n", result->A[0]); 
+}
+
+void relu(ActivationResult_t *result)
+{
+    for (int i = 0; i < result->size; i++)
+    {
+        if (result->A[i] <= 0)
+        {
+            result->A[i] = 0;
+        }
+    }
+}
+
+void sigmoid_derivative(ActivationResult_t *result)
+{
+    for (int i = 0; i < result->size; i++)
+    {
+        result->A[i] = result->A[i] * (1 - result->A[i]);
+    }
+}
+
+void relu_derivative(ActivationResult_t *result)
+{
+    for (int i = 0; i < result->size; i++)
+    {
+        if (result->A[i] <= 0)
+        {
+            result->A[i] = 0;
+        }
+        else
+        {
+            result->A[i] = 1;
+        }
+    }
+}
+
+// Function to allocate memory for a matrix (2D array)
+double **allocate_matrix(int rows, int cols) {
+    double **matrix = (double **)malloc(rows * sizeof(double *));
+    if (matrix == NULL) {
+        fprintf(stderr, "Memory allocation failed for matrix rows.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < rows; i++) {
+        matrix[i] = (double *)malloc(cols * sizeof(double));
+        if (matrix[i] == NULL) {
+            fprintf(stderr, "Memory allocation failed for matrix columns.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return matrix;
+}
+
+// Function to allocate memory for a vector (1D array)
+double *allocate_vector(int size) {
+    double *vector = (double *)malloc(size * sizeof(double));
+    if (vector == NULL) {
+        fprintf(stderr, "Memory allocation failed for vector.\n");
+        exit(EXIT_FAILURE);
+    }
+    return vector;
+}
+
+// Function to initialize parameters for a deep neural network
+LayerParameters_t *initialize_parameters_deep(layerdims_t *layer_dims) {
+    // Allocate memory for the parameters array
+    LayerParameters_t *parameters = (LayerParameters_t *)malloc((layer_dims->L - 1) * sizeof(LayerParameters_t));
+    if (parameters == NULL) {
+        fprintf(stderr, "Memory allocation failed for parameters.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    srand(1); // Seed the random number generator
+
+    for (int l = 1; l < layer_dims->L; l++) {
+        int rows = layer_dims->layer_dims[l];
+        int cols = layer_dims->layer_dims[l - 1];
+
+        printf("Initializing parameters for layer %d with dimensions %d x %d\n", l, rows, cols);
+
+        // Allocate and initialize W with random values scaled by sqrt(1 / cols)
+        parameters[l - 1].W = allocate_matrix(rows, cols);
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                parameters[l - 1].W[i][j] = ((double)rand() / RAND_MAX) / sqrt((double)cols);
+            }
+        }
+
+        // Allocate and initialize b with zeros
+        parameters[l - 1].b = allocate_vector(rows);
+        for (int i = 0; i < rows; i++) {
+            parameters[l - 1].b[i] = 0.0;
+        }
+
+        // Assert the shapes (optional for debugging purposes)
+        assert(parameters[l - 1].W != NULL);
+        assert(parameters[l - 1].b != NULL);
+    }
+
+    return parameters;
+}
+
+
+
+void initialize_activation_results(ActivationResult_t *activation_results, layerdims_t *layer_dims) {
+    for (int l = 0; l < layer_dims->L; l++) {
+        activation_results[l].size = layer_dims->layer_dims[l];
+        printf("Initializing activation_results[%d] with size %d\n", l, activation_results[l].size);
+        activation_results[l].A = (double *)malloc(activation_results[l].size * sizeof(double));
+        if (activation_results[l].A == NULL) {
+            fprintf(stderr, "Memory allocation failed for layer %d\n", l);
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void free_activation_results(ActivationResult_t *activation_results, layerdims_t *layer_dims) {
+    for (int l = 0; l < layer_dims->L; l++) {
+        free(activation_results[l].A);
+    }
+}
+
+void init_gradients(Gradient_t *gradients, int *layer_dims, int num_layers) {
+    for (int l = 1; l < num_layers; l++) {
+        int n = layer_dims[l];
+        int n_prev = layer_dims[l - 1];
+
+        // Initialize gradients
+        gradients[l].da = (double**)malloc(n * sizeof(double*));
+        gradients[l].db = (double*)malloc(n * sizeof(double));
+        gradients[l].dw = (double**)malloc(n * sizeof(double*));
+
+        for (int i = 0; i < n; i++) {
+            gradients[l].da[i] = (double*)calloc(n_prev, sizeof(double));
+            gradients[l].db[i] = 0.0;
+            gradients[l].dw[i] = (double*)calloc(n_prev, sizeof(double));
+        }
+    }
+}
+
+void free_gradients(Gradient_t *gradients, layerdims_t *layerdims) {
+    int num_layers = layerdims->L;
+    int layer_dims[num_layers];
+    for (int l = 1; l < num_layers; l++) {
+        int n = layer_dims[l];
+
+        // Free memory for da
+        for (int i = 0; i < n; i++) {
+            free(gradients[l].da[i]);
+        }
+        free(gradients[l].da);
+
+        // Free memory for db
+        free(gradients[l].db);
+
+        // Free memory for dw
+        for (int i = 0; i < n; i++) {
+            free(gradients[l].dw[i]);
+        }
+        free(gradients[l].dw);
+    }
+}
+
+
+
+// Function to free the allocated memory for parameters
+void free_parameters(LayerParameters_t *parameters, layerdims_t *layerdims)
+{
+    printf("Freeing parameters\n");
+    for (int l = 0; l < layerdims->L - 1; l++)
+    {
+        for (int i = 0; i < layerdims->layer_dims[l + 1]; i++)
+        {
+            free(parameters[l].W[i]);
+        }
+        free(parameters[l].W);
+        free(parameters[l].b);
+    }
+    free(parameters);
+}
+
+void normalize_dataset(dataset_t *dataset, size_t size) {
+    printf("Normalizing the dataset\n");
+    for (size_t i = 0; i < size; i++) {
+        ((unsigned char *)dataset->data)[i] = ((unsigned char *)dataset->data)[i] / 255.0;
+    }
+}
+
+void linear_activation_forward(ActivationResult_t *A_prev, double **W, double *b, ActivationResult_t *A, const char *activation) {
+    // Compute Z = W * A_prev + b
+    printf("Running linear activation forward\n");
+    printf("A_prev size: %d\n", A_prev->size);
+    printf("A size: %d\n", A->size);
+    for (int i = 0; i < A->size; i++) {
+        A->A[i] = b[i];
+        for (int j = 0; j < A_prev->size; j++) {
+            //printf("W[%d][%d]: %f\n", i, j, W[i][j]);
+            A->A[i] += W[i][j] * A_prev->A[j];
+        }
+    }
+    // Apply activation function
+    if (strcmp(activation, "relu") == 0) {
+        relu(A);
+    } else if (strcmp(activation, "sigmoid") == 0) {
+        sigmoid(A);
+    }
+}
+
+void linear_activation_backward(ActivationResult_t *dA, double **W, ActivationResult_t *A_prev, Gradient_t *gradients, const char *activation) {
+    // Initialize dZ
+    ActivationResult_t dZ;
+    dZ.size = dA->size;
+    dZ.A = (double *)malloc(dZ.size * sizeof(double));
+    if (dZ.A == NULL) {
+        fprintf(stderr, "Memory allocation failed for dZ\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Compute dZ
+    if (strcmp(activation, "relu") == 0) {
+        relu_derivative(dA);
+        memcpy(dZ.A, dA->A, dZ.size * sizeof(double));
+    } else if (strcmp(activation, "sigmoid") == 0) {
+        sigmoid_derivative(dA);
+        memcpy(dZ.A, dA->A, dZ.size * sizeof(double));
+    }
+
+    // Compute gradients
+    for (int i = 0; i < dZ.size; i++) {
+        gradients->db[i] += dZ.A[i];
+        for (int j = 0; j < A_prev->size; j++) {
+            gradients->dw[i][j] += dZ.A[i] * A_prev->A[j];
+            gradients->da[i][j] += W[i][j] * dZ.A[i];
+        }
+    }
+
+    free(dZ.A);
+}
+
+void model_forward(unsigned char *X, layerdims_t *layer_dims, LayerParameters_t *parameters, ActivationResult_t *activation_results,  float* result) {
+    printf("Running forward propagation\n");
+
+    // Copy input data to the activation result of the first layer
+    printf("Copying input data to the activation result of the first layer\n");
+    for (int i = 0; i < layer_dims->layer_dims[0]; i++) {
+        activation_results[0].A[i] = (double)((unsigned char*)X)[i];
+    }
+    printf("Input data copied\n");
+    // Forward propagation through the layers
+    for (int l = 1; l < layer_dims->L; l++) {
+        ActivationResult_t *A_prev = &activation_results[l - 1];
+        ActivationResult_t *A = &activation_results[l];
+        double **W = parameters[l-1].W;
+        double *b = parameters[l-1].b;
+        
+        if (l < layer_dims->L - 1) {
+            linear_activation_forward(A_prev, W, b, A, "relu");
+        } else {
+            linear_activation_forward(A_prev, W, b, A, "sigmoid");
+        }
+    }
+    for (int i = 0; i < layer_dims->layer_dims[layer_dims->L - 1]; i++) {
+        printf("Activation result: %f\n", activation_results[layer_dims->L - 1].A[i]);
+        printf("Number of neuron in the last layer: %d\n", layer_dims->layer_dims[layer_dims->L - 1]);
+        *result = (activation_results[layer_dims->L - 1].A[i]);
+    }
+    printf("Forward propagation completed\n");
+}
+
+double compute_loss(double result, double Y) {
+    printf("Computing loss\n");
+    double loss = -Y * log(result) - (1 - Y) * log(1 - result);
+    printf("Loss: %lf\n", loss);
+    return loss;
+}
+
+double compute_loss_derivative(double result, double Y) {
+    printf("Computing loss derivative\n");
+    double loss_derivative = -Y / result + (1 - Y) / (1 - result);
+    printf("Loss derivative: %lf\n", loss_derivative);
+    return loss_derivative;
+}
+
+void compute_cost(float *result, dataset_t *Y, int m) {
+    printf("Computing cost\n");
+    double cost = 0;
+    for (int i = 0; i < m; i++) {
+        double y_i = (double)((long long *)Y->data)[i];
+        double result_i = (double)result[i];
+
+        // Check for valid range of result_i to avoid log(0) and log(1 - 0)
+        if (result_i == 0 || result_i == 1) {
+            printf("Warning: result[%d] = %lf, adjusted to avoid log(0)\n", i, result_i);
+            result_i = fmin(fmax(result_i, 1e-10), 1 - 1e-10);
+        }
+        cost += compute_loss(result_i, y_i); 
+    }
+    printf("Cost before: %lf\n", cost); 
+    cost = cost / m;
+    printf("Cost: %lf\n", cost);
+}
+
+void compute_cost_derivative(float *result, dataset_t *Y, int m) {
+    printf("Computing cost derivative\n");
+    double dcost = 0;
+    for (int i = 0; i < m; i++) {
+        double y_i = (double)((long long *)Y->data)[i];
+        double result_i = (double)result[i];
+        dcost += compute_loss_derivative(result_i, y_i);
+    }
+    dcost = dcost / m;
+    printf("Cost derivative: %lf\n", dcost);
+}
+
+void update_parameters(LayerParameters_t *parameters, Gradient_t *gradients, int *layer_dims, int num_layers, float learning_rate) {
+    for (int l = 1; l < num_layers; l++) {
+        int n = layer_dims[l];
+        int n_prev = layer_dims[l - 1];
+
+        // Update parameters
+        for (int i = 0; i < n; i++) {
+            parameters[l-1].b[i] -= learning_rate * gradients[l].db[i];
+            for (int j = 0; j < n_prev; j++) {
+                parameters[l-1].W[i][j] -= learning_rate * gradients[l].dw[i][j];
+            }
+        }
+    }
+}
+
+
+void dnn(dataset_t *X_train, dataset_t *Y_train, layerdims_t *layer_dims, float learning_rate, int num_iterations)
+{
+    // Example usage
+    // int layer_dims[] = {5, 4, 3}; // Example layer dimensions
+    // nt L = sizeof(layer_dims) / sizeof(layer_dims[0]);
+    printf("Running deep neural network\n");
+    printf("Number of layers: %d\n", layer_dims->L);
+    printf("Layer dimensions: ");
+    for (int i = 0; i < layer_dims->L; i++)
+    {
+        printf("%d ", layer_dims->layer_dims[i]);
+    }
+    printf("\n");
+    printf("Learning rate: %f\n", learning_rate);
+    printf("Number of iterations: %d\n", num_iterations);
+    printf("Input dataset dimensions: %ld x %ld x %ld x %ld\n", X_train->dims[0], X_train->dims[1], X_train->dims[2], X_train->dims[3]);
+    printf("Output dataset dimensions: %ld \n", Y_train->dims[0]);
+
+    LayerParameters_t *parameters = initialize_parameters_deep(layer_dims);
+
+    ActivationResult_t *activation_results = (ActivationResult_t *)malloc(layer_dims->L * sizeof(ActivationResult_t));
+    if (activation_results == NULL) {
+        fprintf(stderr, "Memory allocation failed for activation results\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    Gradient_t *gradients = (Gradient_t *)malloc(layer_dims->L * sizeof(Gradient_t));
+    if (gradients == NULL) {
+        fprintf(stderr, "Memory allocation failed for gradients\n");
+        exit(EXIT_FAILURE);
+    }
+
+    initialize_activation_results(activation_results, layer_dims);
+    init_gradients(gradients, layer_dims->layer_dims, layer_dims->L);
+    normalize_dataset(X_train, X_train->dims[0] * X_train->dims[1] * X_train->dims[2] * X_train->dims[3]);
+
+    int training_examples = X_train->dims[0];
+    int data_size = X_train->dims[1] * X_train->dims[2] * X_train->dims[3];
+    float *result = malloc(sizeof(int) * training_examples);
+    /*for (int i=0; i < training_examples; i++) {
+        printf("Training example: %d\n", i);
+        model_forward(&((unsigned char *)X_train->data)[i * data_size], layer_dims, parameters, activation_results, &result[i]);
+        printf("Result: %f\n", result[i]);
+        printf("Actual: %lld\n", ((long long *)Y_train->data)[i]);
+        printf("---------------------  \n\n\n");
+    }
+    */
+    
+
+
+    for (int i = 0; i < num_iterations; i++)
+    {
+        printf("Iteration: %d\n", i);
+        for (int j=0; j < training_examples; j++) {
+            printf("Training example: %d\n", j);
+            model_forward(&((unsigned char *)X_train->data)[j * data_size], layer_dims, parameters, activation_results, &result[j]);
+            printf("Result: %f\n", result[j]);
+            printf("Actual: %lld\n", ((long long *)Y_train->data)[j]);
+            compute_loss(result[j], ((long long *)Y_train->data)[j]);
+            //compute_backpropagation(result[j], ((long long *)Y_train->data)[j], layer_dims, parameters, activation_results);
+            printf("---------------------  \n\n\n");
+        }
+        compute_cost(result, Y_train, training_examples);
+    }
+
+    printf("Saving parameters to txt file");
+    FILE *fp = fopen("parameters.txt", "w");
+    if (fp == NULL) {
+        fprintf(stderr, "Error opening file for writing: parameters.txt\n");
+        return;
+    }
+    for (int l = 0; l < layer_dims->L - 1; l++) {
+        for (int i = 0; i < layer_dims->layer_dims[l + 1]; i++) {
+            for (int j = 0; j < layer_dims->layer_dims[l]; j++) {
+                fprintf(fp, "%f ", parameters[l].W[i][j]);
+            }
+            fprintf(fp, "\n");
+        }
+        for (int i = 0; i < layer_dims->layer_dims[l + 1]; i++) {
+            fprintf(fp, "%f ", parameters[l].b[i]);
+        }
+        fprintf(fp, "\n");
+    }
+
+    // Free the allocated memory
+    free_parameters(parameters, layer_dims);
+    free_gradients(gradients, layer_dims);
+    free_activation_results(activation_results, layer_dims);
+
+    return;
+}

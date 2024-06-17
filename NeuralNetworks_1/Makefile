@@ -1,39 +1,22 @@
-# Include the directory-specific makefile
-include Dir.mk
 BUILD_DIR = build
 
-CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -L/home/antshiv/Programs/lib -lhdf5 -lm
-LDFLAGS= 
+.PHONY: all deep_neural_network common clean
 
-# Default Rule
-all: $(BUILD_DIR)/$(TARGET)
+all: deep_neural_network
 
-debug: CFLAGS += -DDEBUG -g
-debug: $(BUILD_DIR)/$(TARGET)
-	@touch debug_build
+#logistic_regression:
+#	$(MAKE) -C logistic_regression
 
-# Release rule (optional, to explicitly build without debug info)
-release: CFLAGS += -O2
-release: $(BUILD_DIR)/$(TARGET)
+deep_neural_network:
+	$(MAKE) -C deep_neural_network
 
-# Link object files into executable
-$(BUILD_DIR)/$(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^ $(CFLAGS) 
+common:
+	$(MAKE) -C common
 
-# Compile source files into object files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: $(LOGISTIC_DIR)/%.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Ensure the build directory exists
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-# Clean up build files
 clean:
+#	$(MAKE) -C logistic_regression clean
+	$(MAKE) -C deep_neural_network clean
+	$(MAKE) -C common clean
+	rm -rf obj
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all debug release clean

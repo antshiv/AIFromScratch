@@ -9,7 +9,7 @@ $(shell mkdir -p $(OBJ_DIR))
 # Compiler and flags
 CC := gcc
 CFLAGS := -I$(INC_DIR) -I../common/include -I../include -Wall -Wextra -Werror
-LDFLAGS := -L../common -lcommon -lhdf5
+LDFLAGS := -L../common -L/home/antshiv/Programs/lib -lcommon -lhdf5 -lm
 
 # Files
 SRC := $(wildcard $(SRC_DIR)/*.c)
