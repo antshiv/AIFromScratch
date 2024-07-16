@@ -1,0 +1,41 @@
+# CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.10)
+project(TransformerProject)
+
+# Set C standard
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED True)
+
+# Add include directory
+include_directories(include)
+
+# Add source files
+set(SOURCES
+    src/main.c
+    src/attention.c
+    src/attention_backward.c
+    src/feedforward.c
+    src/feedforward_backward.c
+    src/positional_encoding.c
+    src/transformer.c
+    src/transformer_backward.c
+    src/utils.c
+    src/loss.c
+    src/loss_backward.c
+)
+
+# Create executable
+add_executable(transformer_encoder ${SOURCES})
+
+# Add tests
+enable_testing()
+add_executable(test_attention tests/test_attention.c src/attention.c src/utils.c)
+add_executable(test_feedforward tests/test_feedforward.c src/feedforward.c src/utils.c)
+add_executable(test_positional_encoding tests/test_positional_encoding.c src/positional_encoding.c src/utils.c)
+add_executable(test_transformer tests/test_transformer.c src/transformer.c src/utils.c)
+
+add_test(NAME TestAttention COMMAND test_attention)
+add_test(NAME TestFeedForward COMMAND test_feedforward)
+add_test(NAME TestPositionalEncoding COMMAND test_positional_encoding)
+add_test(NAME TestTransformer COMMAND test_transformer)

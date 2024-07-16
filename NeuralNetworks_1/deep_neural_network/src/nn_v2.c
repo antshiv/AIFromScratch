@@ -151,7 +151,7 @@ void backward_propagation(NeuralNetwork_t *nn, float *X, float *Y)
         free(dZ);
         dZ = dZ_current;
     }
-    // Free th final dZ
+    // Free the final dZ
     free(dZ);
 }
 
