@@ -1,0 +1,3 @@
+/data/AI/c_code/Transformer_Encoder_scratch/build/CMakeFiles/transformer_encoder.dir
+/data/AI/c_code/Transformer_Encoder_scratch/build/CMakeFiles/edit_cache.dir
+/data/AI/c_code/Transformer_Encoder_scratch/build/CMakeFiles/rebuild_cache.dir

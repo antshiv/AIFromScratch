@@ -1,0 +1,3 @@
+/data/AI/c_code/basic_nn_tensorboard/build/CMakeFiles/transformer_encoder.dir
+/data/AI/c_code/basic_nn_tensorboard/build/CMakeFiles/edit_cache.dir
+/data/AI/c_code/basic_nn_tensorboard/build/CMakeFiles/rebuild_cache.dir

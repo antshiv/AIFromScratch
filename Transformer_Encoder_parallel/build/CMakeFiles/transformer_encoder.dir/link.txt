@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/transformer_encoder.dir/src/main.c.o CMakeFiles/transformer_encoder.dir/src/transformer.c.o CMakeFiles/transformer_encoder.dir/src/utils.c.o CMakeFiles/transformer_encoder.dir/src/draw_computational_graph.c.o -o transformer_encoder  -lm

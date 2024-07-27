@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    {"name": "token_embedding", "type": "Variable", "shape": [V, embed_dim]},
+    {"name": "positional_encoding", "type": "Variable", "shape": [max_length, embed_dim]},
+    {"name": "layer_norm1_weight", "type": "Variable", "shape": [embed_dim]},
+    {"name": "layer_norm1_bias", "type": "Variable", "shape": [embed_dim]},
+    {"name": "qkv_weight", "type": "Variable", "shape": [embed_dim / atten_head, embed_dim / atten_head, 3]},
+    {"name": "qkv_bias", "type": "Variable", "shape": [embed_dim / atten_head]},
+    {"name": "attention_proj_weight", "type": "Variable", "shape": [embed_dim, embed_dim]},
+    {"name": "attention_proj_bias", "type": "Variable", "shape": [embed_dim]},
+    {"name": "layer_norm2_weight", "type": "Variable", "shape": [embed_dim]},
+    {"name": "layer_norm2_bias", "type": "Variable", "shape": [embed_dim]},
+    {"name": "feedforward1_weight", "type": "Variable", "shape": [embed_dim, feedforward_dim]},
+    {"name": "feedforward1_bias", "type": "Variable", "shape": [feedforward_dim]},
+    {"name": "feedforward2_weight", "type": "Variable", "shape": [feedforward_dim, embed_dim]},
+    {"name": "feedforward2_bias", "type": "Variable", "shape": [embed_dim]},
+    {"name": "layer_norm3_weight", "type": "Variable", "shape": [embed_dim]},
+    {"name": "layer_norm3_bias", "type": "Variable", "shape": [embed_dim]},
+    {"name": "ner_weight", "type": "Variable", "shape": [num_classes, embed_dim]},
+    {"name": "ner_bias", "type": "Variable", "shape": [num_classes]}
+  ]
+}

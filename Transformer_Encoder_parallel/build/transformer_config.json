@@ -1,0 +1,87 @@
+{
+  "config": {
+    "num_layers": 6,
+    "embed_dim": 384,
+    "batch_size": 64,
+    "num_heads": 8,
+    "feedforward_dim": 2048,
+    "dropout": 0.00,
+    "vocab_size": 32000,
+    "max_length": 256,
+    "num_classes": 13
+  },
+  "parameters": [
+    {
+      "size": 32584,
+      "pointer": "0x7f48e7837010"
+    },
+    {
+      "size": 98304,
+      "pointer": "0x7f48ea717010"
+    },
+    {
+      "size": 2304,
+      "pointer": "0xea779410ea777010"
+    },
+    {
+      "size": 2304,
+      "pointer": "0x7f48ea77b810"
+    },
+    {
+      "size": 331776,
+      "pointer": "0x7f48ea8bf810"
+    },
+    {
+      "size": 288,
+      "pointer": "0x7f48ea8bfc90"
+    },
+    {
+      "size": 884736,
+      "pointer": "0x7f48eac1fc90"
+    },
+    {
+      "size": 2304,
+      "pointer": "0xeac24490eac22090"
+    },
+    {
+      "size": 2304,
+      "pointer": "0xebe26890eac26890"
+    },
+    {
+      "size": 2304,
+      "pointer": "0xed032890ebe32890"
+    },
+    {
+      "size": 4718592,
+      "pointer": "0xed037090ed034c90"
+    },
+    {
+      "size": 12288,
+      "pointer": "0xed056890ed039490"
+    },
+    {
+      "size": 4718592,
+      "pointer": "0x7f48"
+    },
+    {
+      "size": 2304,
+      "pointer": "0x18000"
+    },
+    {
+      "size": 2304,
+      "pointer": "0x900"
+    },
+    {
+      "size": 2304,
+      "pointer": "0x900"
+    },
+    {
+      "size": 29952,
+      "pointer": "0x51000"
+    },
+    {
+      "size": 78,
+      "pointer": "0x120"
+    }
+  ]
+}

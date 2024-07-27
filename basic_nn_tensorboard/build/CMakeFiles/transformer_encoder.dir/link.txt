@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/transformer_encoder.dir/src/main.c.o CMakeFiles/transformer_encoder.dir/src/transformer.c.o CMakeFiles/transformer_encoder.dir/src/utils.c.o -o transformer_encoder   -L/home/antshiv/Programs/lib  -Wl,-rpath,/home/antshiv/Programs/lib -lm -ltensorflow -lm -ltensorflow
